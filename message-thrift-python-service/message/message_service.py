@@ -4,15 +4,37 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
 
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+
+sender = 'leiipadforpdf@163.com'
+authCode = 'authcodelei18'
+
 # thrift自动生成的MessageService接口,我们自己手动实现
 class MessageServiceHandler:
     def sendSMS(self, phone, message):
-        print("send SMS ")
+        print("send SMS, phone:"+phone+", message: "+message)
         return True
 
     def sendEmail(self, email, message):
-        print("send email")
-        return True
+        # 创建邮件信息对象，用SMTP服务器对象发送邮件信息对象
+        print("send email, email:"+email+", message:"+message)
+        messageObj = MIMEText(message, "plain", "utf-8")
+        messageObj['From'] = sender
+        messageObj['To'] = email
+        messageObj['Header'] = Header('夏雷服务器端发送的邮件', 'utf-8')
+        try:
+            smtpObj = smtplib.SMTP('smtp.163.com')
+            smtpObj.auth_login(sender, authCode)
+            smtpObj.sendmail(sender, [email], messageObj.as_string())
+            print('send email success')
+            return True
+        except smtplib.SMTPException as ex:
+            print('send email failed')
+            print(ex)
+            return False
+
 
 # 对接 thrift 和 自己写好的类
 if __name__ == "__main__":
